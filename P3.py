@@ -1,4 +1,14 @@
-from math import sqrt
+import math
+
+
+def calculate_rssi(ap, distance):
+    return ap.power - 20*math.log10(distance) - 20*math.log(ap.frequency) - 32.44
+
+def find_distance(ap1, ap2):
+    x1, y1 = ap1.coord
+    x2, y2 = ap2.coord
+
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 
 class AccessController:
@@ -11,8 +21,7 @@ class AccessController:
         x1, y1 = ap1.coord
         x2, y2 = ap2.coord
 
-        distance = sqrt((x2 - x1)**2 + (y2 - y1)**2)
-        return distance
+        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
     def is_overlap(self, ap1, ap2):
         overlap_radius = ap1.coverage + ap2.coverage
@@ -46,9 +55,9 @@ class AccessController:
             self.log.append(f'Step {self.step}: AC REQUIRES {ap1.apName} TO CHANGE CHANNEL TO {ap1.channel}')
             ap_lst = list(self.AP_dict.values())
 
+
 class AccessPoints:
     def __init__(self, *parameters):
-        self.parameters = parameters
         if len(parameters) == 13:
             self.minimal_rssi = parameters[-1]
         else:
@@ -56,14 +65,15 @@ class AccessPoints:
         self.apName = parameters[0]
         self.coord = (int(parameters[1]), int(parameters[2]))
         self.channel = int(parameters[3])
-        self.power = parameters[4]
-        self.frequency = parameters[5]
+        self.power = int(parameters[4])
+        self.frequency = int(parameters[5])
         self.standard = parameters[6]
         self.supports = (parameters[7],parameters[8],parameters[9])
         self._11k, self._11v, self._11r = self.supports
         self.coverage = int(parameters[10])
-        self.device_limit = parameters[11]
+        self.device_limit = int(parameters[11])
         self.clients = []
+        self.step = 0
 
     def add_client(self, client):
         self.clients.append(client)
@@ -90,8 +100,12 @@ class ClientObj:
         self.log = []
         self.step = 0
 
-    def client_move(self,move):
+    def client_move(self, move):
         self.coord = (int(move[0]), int(move[1]))
+
+    def connect_to_ap(self, ap):
+        if calculate_rssi(ap, ) < self.minimal_rssi:
+
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.clientName},{self.coord},{self.standard},{self.speed},{self.supports},{self.minimal_rssi})'
@@ -120,13 +134,6 @@ class FileManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.file.close()
 
-class AP:
-    def __init__(self, *parameters):
-        self.channel = int(parameters[0])
-        self.coord = (int(parameters[1]), int(parameters[2]))
-        self.coverage = int(parameters[3])
-    def __repr__(self):
-        return f'{self.__class__.__name__}({self.channel},{self.coord},{self.coverage})'
 
 if __name__ == '__main__':
     client_dict = {}
@@ -140,6 +147,3 @@ if __name__ == '__main__':
         elif line[0] == 'CLIENT':
             client_dict[line[1]] = ClientObj(*line[1:])
 
-
-    print(client_dict)
-    print(AP_dict)
