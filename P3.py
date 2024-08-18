@@ -1,27 +1,34 @@
 import math
 
 
-def calculate_rssi(ap, distance):
-    return ap.power - 20*math.log10(distance) - 20*math.log(ap.frequency) - 32.44
+class RoamingSimulator:
+    def __init__(self, path):
+        self.file = path
+        self.client_dict = {}
+        self.ap_dict = {}
+        self.moves = []
+        self.initalizeFunctions()
 
-def find_distance(ap1, ap2):
-    x1, y1 = ap1.coord
-    x2, y2 = ap2.coord
+    def initalizeFunctions(self):
+        self.file_read()
+        self.access_controller()
 
-    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    def file_read(self):
+        for line in self.file:
+            line = line.split()
+            print(line)
+            if line[0] == 'AP':
+                self.ap_dict[line[1]] = AccessPoints(*line[1:])
+            elif line[0] == 'CLIENT':
+                self.client_dict[line[1]] = ClientObj(*line[1:])
+            elif line[0] == 'MOVE':
+                self.moves.append(line[1:])
 
+    def find_distance(self, obj1, obj2):
+        x1, y1 = obj1.coord
+        x2, y2 = obj2.coord
 
-class AccessController:
-    def __init__(self, ap_dict):
-        self.AP_dict = ap_dict
-        self.log = []
-        self.step = 0
-
-    def find_distance(self, ap1, ap2):
-        x1, y1 = ap1.coord
-        x2, y2 = ap2.coord
-
-        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
     def is_overlap(self, ap1, ap2):
         overlap_radius = ap1.coverage + ap2.coverage
@@ -31,9 +38,12 @@ class AccessController:
         else:
             return False
 
-    def compare_aps(self):
-        ap_lst = list(self.AP_dict.values())
+    def access_controller(self):
+        self.aclog = []
+        step = 1
+        ap_lst = list(self.ap_dict.values())
         for ap1 in ap_lst:
+            ap1_copy = ap1
             channels = [ap1.channel]
             while True:
                 changed = False
@@ -52,11 +62,28 @@ class AccessController:
                             changed = True
                 if not changed:
                     break
-            self.log.append(f'Step {self.step}: AC REQUIRES {ap1.apName} TO CHANGE CHANNEL TO {ap1.channel}')
-            ap_lst = list(self.AP_dict.values())
+            if ap1 != ap1_copy:
+                self.aclog.append(f'Step {step}: AC REQUIRES {ap1.apName} TO CHANGE CHANNEL TO {ap1.channel}')
+                step += 1
+            ap_lst = list(self.ap_dict.values())
+
+    def iterate_moves(self):
+        for move in self.moves:
+            self.client_dict[move[0]].client_move(move[1:])
+
+    def __call__(self, name):
+        obj_dict = {**self.ap_dict, **self.client_dict}
+        if name == 'AC':
+            return self.aclog
+        return obj_dict[name].__call__()
 
 
-class AccessPoints:
+"""
+develop move method
+"""
+
+
+class AccessPoints(RoamingSimulator):
     def __init__(self, *parameters):
         if len(parameters) == 13:
             self.minimal_rssi = parameters[-1]
@@ -66,13 +93,14 @@ class AccessPoints:
         self.coord = (int(parameters[1]), int(parameters[2]))
         self.channel = int(parameters[3])
         self.power = int(parameters[4])
-        self.frequency = int(parameters[5])
+        self.frequency = map(int, (parameters[5].split('/')))
         self.standard = parameters[6]
-        self.supports = (parameters[7],parameters[8],parameters[9])
+        self.supports = (parameters[7], parameters[8], parameters[9])
         self._11k, self._11v, self._11r = self.supports
         self.coverage = int(parameters[10])
         self.device_limit = int(parameters[11])
         self.clients = []
+        self.log = []
         self.step = 0
 
     def add_client(self, client):
@@ -84,11 +112,18 @@ class AccessPoints:
     def __len__(self):
         return len(self.clients)
 
+    def __eq__(self, other):
+        if type(other) == type(self):
+            return self.channel == other.channel
+
     def __repr__(self):
         return f'{self.__class__.__name__}({self.apName},{self.coord},{self.channel},{self.power},{self.frequency},{self.standard},{self.supports},{self.coverage},{self.device_limit},{self.minimal_rssi})'
 
+    def __call__(self):
+        return self.log
 
-class ClientObj:
+
+class ClientObj(RoamingSimulator):
     def __init__(self, *parameters):
         self.clientName = parameters[0]
         self.coord = (int(parameters[1]), int(parameters[2]))
@@ -103,36 +138,18 @@ class ClientObj:
     def client_move(self, move):
         self.coord = (int(move[0]), int(move[1]))
 
-    def connect_to_ap(self, ap):
-        if calculate_rssi(ap, ) < self.minimal_rssi:
+    def calculate_rssi(ap, distance):
+        return ap.power - 20 * math.log10(distance) - 20 * math.log(ap.frequency) - 32.44
 
+    def connect_to_ap(self, ap):
+        if self.calculate_rssi(ap, RoamingSimulator.find_distance(self, ap)) < self.minimal_rssi:
+            pass
+
+    def __call__(self):
+        return self.log
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.clientName},{self.coord},{self.standard},{self.speed},{self.supports},{self.minimal_rssi})'
-
-
-
-
-class FileManager:
-    def __init__(self, path):
-        self.path = path
-        self.client_dict = {}
-        self.AP_dict = {}
-    def __enter__(self):
-        self.file = open(self.path, 'r')
-        return self.file
-    def line_process(self):
-        for line in self.file:
-            line = line.split()
-            if line[0] == 'AP':
-                self.AP_dict[line[1]] = AccessPoints(line[1:])
-            elif line[0] == 'CLIENT':
-                self.client_dict[line[1]] = ClientObj(line[1:])
-            elif line[0] == 'MOVE':
-                self.client_dict[line[1]].client_move((line[2], line[3]))
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.file.close()
 
 
 if __name__ == '__main__':
