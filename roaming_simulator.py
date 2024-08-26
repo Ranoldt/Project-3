@@ -1,5 +1,6 @@
 from client import ClientObj
 from access_point import AccessPoints
+from access_controller import AccessController
 import math
 import pickle
 
@@ -14,7 +15,7 @@ class RoamingSimulator:
     def initalize_functions(self):
         self.file_read()
         print('files done')
-        self.access_controller()
+        self.AC = AccessController(self.ap_dict)
         print('controllers done')
         self.connect(list(self.client_dict.values()))
         print('inital connection done')
@@ -37,43 +38,6 @@ class RoamingSimulator:
 
         return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-    def is_overlap(self, ap1, ap2):
-        overlap_radius = ap1.coverage + ap2.coverage
-        distance = self.find_distance(ap1, ap2)
-        if overlap_radius > distance:
-            return True
-        else:
-            return False
-
-    def access_controller(self):
-        self.aclog = []
-        step = 1
-        ap_lst = list(self.ap_dict.values())
-        for ap1 in ap_lst:
-            ap1_copy = ap1
-            channels = [ap1.channel]
-            while True:
-                changed = False
-                for ap2 in ap_lst:
-                    if ap1 is not ap2 and ap1.channel == ap2.channel and self.is_overlap(ap1, ap2):
-                        for channel in [11, 6, 1]:
-                            if channel not in channels:
-                                channels.append(channel)
-                                ap1.channel = channel
-                                changed = True
-                                break
-                        else:
-                            new_channel = ap1.channel - 1 if ap1.channel > 1 else 2
-                            ap1.channel = new_channel
-                            channels.append(ap1.channel)
-                            changed = True
-                if not changed:
-                    break
-            if ap1 != ap1_copy:
-                self.aclog.append(f'Step {step}: AC REQUIRES {ap1.name} TO CHANGE CHANNEL TO {ap1.channel}')
-                step += 1
-            ap_lst = list(self.ap_dict.values())
-
     def iterate_moves(self):
         for move in self.moves:
             self.client_dict[move[0]].client_move(move[1:])
@@ -82,7 +46,7 @@ class RoamingSimulator:
     def __call__(self, name):
         obj_dict = {**self.ap_dict, **self.client_dict}
         if name == 'AC':
-            return self.aclog
+            return self.AC.__call__()
         return obj_dict[name].__call__()
 
     def connect(self, cl, roam=None):
@@ -117,7 +81,7 @@ class RoamingSimulator:
                 -max(ap.frequency),
                 -ap.power,
                 self.sort_standards(ap,cl),
-                ap.standard[1] < cl.standard[1]
+                ap.standard < cl.standard
             )
         lst = sorted(lst, key=sorting_connections)
         return lst

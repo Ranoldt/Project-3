@@ -1,39 +1,31 @@
+from network_entity import NetworkEntity
 
-class AccessPoints():
+
+class AccessPoints(NetworkEntity):
     def __init__(self, *parameters):
-        if len(parameters) == 13:
-            self.minimal_rssi = -int(parameters[-1])
-        else:
-            self.minimal_rssi = None
-        self.name = parameters[0]
-        self.coord = (int(parameters[1]), int(parameters[2]))
+        super().__init__(*parameters[:3], parameters[6], parameters[5], *parameters[7:9], *parameters[9::3])
         self.channel = int(parameters[3])
         self.power = int(parameters[4])
-        self.frequency = tuple(map(float, (parameters[5].split('/'))))
-        self.standard = (parameters[6], int(parameters[6][4:]))
-        self.supports = (parameters[7], parameters[8], parameters[9])
-        self._11k, self._11v, self._11r = self.supports
         self.coverage = int(parameters[10])
         self.device_limit = int(parameters[11])
         self.clients = []
-        self.log = []
-        self.step = 0
+        self.step = 1
 
     def add_client(self, client, roam=None):
         if len(self.clients) < self.device_limit:
             if roam:
-                if self._11r == 'true':
-                    self.log.append(f'Step {self.step}: {client.name} FAST ROAM TO {self.name}')
+                if self.supports_11r == 'true':
+                    self.log_action(f'Step {self.step}: {client.name} FAST ROAM TO {self.name}')
                 else:
-                    self.log.append(f'Step {self.step}: {client.name} ROAM TO {self.name}')
+                    self.log_action(f'Step {self.step}: {client.name} ROAM TO {self.name}')
             self.clients.append(client)
-            self.log.append(
+            self.log_action(
                 f'Step {self.step}: {client.name} CONNECT LOCATION {client.coord[0]} {client.coord[1]} {client.standard[0]} {client.speed} {client._11k} {client._11v} {client._11r}')
         elif roam:
-            self.log.append(f'Step {self.step}: {client.name} TRIED {self.name} BUT WAS DENIED')
+            self.log_action(f'Step {self.step}: {client.name} TRIED {self.name} BUT WAS DENIED')
 
     def remove_client(self, client):
-        self.log.append(
+        self.log_action(
             f'Step {self.step}: {client.name} DISCONNECTS AT LOCATION {client.coord[0]} {client.coord[1]}')
         self.clients.remove(client)
 
@@ -42,7 +34,13 @@ class AccessPoints():
             return self.channel == other.channel
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.standard[0]},{self.supports},{self.coverage},{self.device_limit},{self.minimal_rssi})'
+        return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.wifi_standard},{self.supports},{self.coverage},{self.device_limit},{self.minimal_rssi})'
 
     def __call__(self):
         return self.log
+
+if __name__ == '__main__':
+    x = ['AP2', '100', '100', '6', '20', '5', 'WiFi7', 'false', 'true', 'false', '40', '60']
+    y = ['AP1', '0', '0', '6', '20', '2.4/5', 'WiFi6', 'true', 'true', 'true', '50', '10', '75']
+    access_points = AccessPoints(*y)
+    print(access_points)
