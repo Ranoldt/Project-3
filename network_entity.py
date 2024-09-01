@@ -29,7 +29,7 @@ class NetworkEntity:
         x1, y1 = self.coord
         x2, y2 = obj2.coord
 
-        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
     def log_action(self, message):
         self.log.append(message)

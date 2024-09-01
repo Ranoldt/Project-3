@@ -20,18 +20,16 @@ class AccessPoints(NetworkEntity):
                     self.log_action(f'Step {self.step}: {client.name} ROAM TO {self.name}')
             self.clients.append(client)
             self.log_action(
-                f'Step {self.step}: {client.name} CONNECT LOCATION {client.coord[0]} {client.coord[1]} {client.standard[0]} {client.speed} {client._11k} {client._11v} {client._11r}')
-        elif roam:
+                f'Step {self.step}: {client.name} CONNECT LOCATION {client.coord[0]} {client.coord[1]} {client.wifi_standard} {client.frequency_str} {client.supports_11k} {client.supports_11v} {client.supports_11r}')
+            return True
+        else:
             self.log_action(f'Step {self.step}: {client.name} TRIED {self.name} BUT WAS DENIED')
+            return False
 
     def remove_client(self, client):
         self.log_action(
             f'Step {self.step}: {client.name} DISCONNECTS AT LOCATION {client.coord[0]} {client.coord[1]}')
         self.clients.remove(client)
-
-    def __eq__(self, other):
-        if type(other) == type(self):
-            return self.channel == other.channel
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.wifi_standard},{self.supports},{self.coverage},{self.device_limit},{self.minimal_rssi})'

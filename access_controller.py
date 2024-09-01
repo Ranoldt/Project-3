@@ -2,8 +2,9 @@ from network_entity import NetworkEntity
 
 
 class AccessController:
-    def __init__(self, ap_dict):
+    def __init__(self, ap_dict, client_dict):
         self.ap_dict = ap_dict
+        self.client_dict = client_dict
         self.log = []
         self.step = 1
         self.access_controller()
@@ -11,7 +12,7 @@ class AccessController:
     def access_controller(self):
         ap_lst = list(self.ap_dict.values())
         for ap1 in ap_lst:
-            ap1_copy = ap1
+            ap1_copy = ap1.channel
             channels = [ap1.channel]
             while True:
                 changed = False
@@ -30,12 +31,11 @@ class AccessController:
                             changed = True
                 if not changed:
                     break
-            if ap1 != ap1_copy:
+            if ap1.channel != ap1_copy:
                 self.log.append(f'Step {self.step}: AC REQUIRES {ap1.name} TO CHANGE CHANNEL TO {ap1.channel}')
                 self.step += 1
             ap_lst = list(self.ap_dict.values())
 
-    @staticmethod
     def is_overlap(self, ap1, ap2):
         overlap_radius = ap1.coverage + ap2.coverage
         distance = NetworkEntity.find_distance(ap1, ap2)
@@ -45,4 +45,7 @@ class AccessController:
             return False
 
     def __call__(self):
-        return self.log
+        cl_dict = {cl.name: cl.log for cl in self.client_dict.values()}
+        ap_dict = {ap.name: ap.log for ap in self.ap_dict.values()}
+        _dict = {'AccessController': self.log, **ap_dict, **cl_dict}
+        return _dict

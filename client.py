@@ -11,8 +11,6 @@ class ClientObj(NetworkEntity):
         self.coord = (int(move[0]), int(move[1]))
 
     def connect_to_ap(self, ap, roam=None):
-        from roaming_simulator import RoamingSimulator
-
         if len(ap.clients) < ap.device_limit:
             if roam:
                 self.log_action(f'Step {self.step}: CLIENT ROAM FROM {self.connected} TO {ap.name}')
@@ -20,20 +18,16 @@ class ClientObj(NetworkEntity):
                 self.disconnect_to_ap()
                 ap.remove_client(self)
             self.connected = ap.name
-            self.signal_strength = RoamingSimulator.calculate_rssi(ap, RoamingSimulator.find_distance(self, ap))
+            self.signal_strength = self.calculate_rssi(ap, self.find_distance(ap))
             self.log_action(f'Step {self.step}: CLIENT CONNECT TO {ap.name} WITH SIGNAL STRENGTH {self.signal_strength}')
             self.step += 1
-            return True
         elif roam:
             self.log_action(f'Step {self.step}: CLIENT ROAM DENIED')
             self.step += 1
-            return False
-        return False
 
     def disconnect_to_ap(self):
         self.log_action(f'Step {self.step}: CLIENT DISCONNECT FROM {self.connected} WITH SIGNAL STRENGTH {self.signal_strength}')
         self.step += 1
-
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.name},{self.coord},{self.wifi_standard},{self.frequency},{self.supports},{self.minimal_rssi})'
