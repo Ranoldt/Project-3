@@ -53,8 +53,9 @@ class RoamingSimulator:
                 connectable_ap.append(ap_obj)
             if len(connectable_ap) == 0:
                 if client_obj.connected:
+                    ap = self.ap_dict[client_obj.connected]
+                    ap.remove_client(client_obj)
                     client_obj.disconnect_to_ap()
-                    client_obj.connected = None
                 return
             connectable_ap = self.configure_connections(client_obj, connectable_ap)
             if connectable_ap[0].name == client_obj.connected:

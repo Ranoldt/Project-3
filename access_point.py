@@ -28,7 +28,8 @@ class AccessPoints(NetworkEntity):
 
     def remove_client(self, client):
         self.log_action(
-            f'Step {self.step}: {client.name} DISCONNECTS AT LOCATION {client.coord[0]} {client.coord[1]}')
+            f'Step {self.step}: {client.name} DISCONNECTS AT LOCATION {client.x} {client.y}')
+        client.x, client.y = client.coord[0], client.coord[1]
         self.clients.remove(client)
 
     def __repr__(self):

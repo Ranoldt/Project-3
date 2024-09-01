@@ -4,6 +4,8 @@ import math
 class NetworkEntity:
     def __init__(self, name,x,y, wifi_standard, frequency, supports_11k, supports_11v, supports_11r, minimal_rssi=None):
         self.name = name
+        self.x = x
+        self.y = y
         self.coord = (int(x), int(y))
         self.frequency_str = frequency
         self.wifi_standard = wifi_standard
