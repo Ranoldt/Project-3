@@ -13,17 +13,17 @@ class ClientObj(NetworkEntity):
     def connect_to_ap(self, ap, roam=None):
         if len(ap.clients) < ap.device_limit:
             if roam:
-                self.log_action(f'Step {self.step}: CLIENT ROAM FROM {self.connected} TO {ap.name}')
+                self.log_action(f'Step {self.step}: CLIENT ROAM FROM {self.connected.name} TO {ap.name}')
+                self.connected.remove_client(self)
                 self.disconnect_to_ap()
-                ap.remove_client(self)
-            self.connected = ap.name
+            self.connected = ap
             self.signal_strength = self.calculate_rssi(ap, self.find_distance(ap))
-            self.log_action(f'Step {self.step}: CLIENT CONNECT TO {ap.name} WITH SIGNAL STRENGTH {self.signal_strength}')
+            self.log_action(f'Step {self.step}: CLIENT CONNECT TO {ap.name} WITH SIGNAL STRENGTH {-self.signal_strength}')
         elif roam:
             self.log_action(f'Step {self.step}: CLIENT ROAM DENIED')
 
     def disconnect_to_ap(self):
-        self.log_action(f'Step {self.step}: CLIENT DISCONNECT FROM {self.connected} WITH SIGNAL STRENGTH {self.signal_strength}')
+        self.log_action(f'Step {self.step}: CLIENT DISCONNECT FROM {self.connected.name} WITH SIGNAL STRENGTH {-self.signal_strength}')
         self.connected = None
 
     def __repr__(self):

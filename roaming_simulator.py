@@ -51,14 +51,14 @@ class RoamingSimulator:
                     if cl_rssi < ap_obj.minimal_rssi:
                         continue
                 connectable_ap.append(ap_obj)
-            if len(connectable_ap) == 0:
+            if not connectable_ap:
                 if client_obj.connected:
-                    ap = self.ap_dict[client_obj.connected]
+                    ap = client_obj.connected
                     ap.remove_client(client_obj)
                     client_obj.disconnect_to_ap()
                 return
             connectable_ap = self.configure_connections(client_obj, connectable_ap)
-            if connectable_ap[0].name == client_obj.connected:
+            if connectable_ap[0] is client_obj.connected:
                 return
             for ap in connectable_ap:
                 client_obj.connect_to_ap(ap, roam)

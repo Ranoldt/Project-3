@@ -29,3 +29,9 @@ move_inside = ('AP AP1 0 0 6 20 2.4/5 WiFi6 true true true 50 4\n'
 move_outside = ('AP AP1 0 0 6 20 2.4/5 WiFi6 true true true 50 4\n'
                 'CLIENT Client1 5 5 WiFi4 2.4/5 true true true 110\n'
                 'MOVE Client1 20 20')
+
+roaming1 = ('AP AP1 0 0 6 20 2.4/5 WiFi6 true true true 50 4\n'
+            'AP AP2 20 20 6 20 2.4/5 WiFi6 true true true 50 4\n'
+            'CLIENT Client1 5 5 WiFi4 2.4/5 true true true 110\n'
+            'MOVE Client1 25 25')
+
