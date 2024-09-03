@@ -15,7 +15,7 @@ class RoamingSimulator:
     def initialize_functions(self):
         self.file_read()
         self.AC = AccessController(self.ap_dict, self.client_dict)
-        self.connect(list(self.client_dict.values()))
+        self.find_connections(list(self.client_dict.values()))
         self.iterate_moves()
 
     def file_read(self):
@@ -40,9 +40,9 @@ class RoamingSimulator:
     def iterate_moves(self):
         for move in self.moves:
             self.client_dict[move[0]].client_move(move[1:])
-            self.connect([self.client_dict[move[0]]], True)
+            self.find_connections([self.client_dict[move[0]]], True)
 
-    def connect(self, cl, roam=None):
+    def find_connections(self, cl, roam=None):
         for client_obj in cl:
             connectable_ap = []
             for ap_name, ap_obj in self.ap_dict.items():
@@ -53,25 +53,27 @@ class RoamingSimulator:
                     if cl_rssi < ap_obj.minimal_rssi:
                         continue
                 connectable_ap.append(ap_obj)
+            self.connection_protocol(client_obj, connectable_ap, roam)
 
-            if not connectable_ap:
-                if client_obj.connected:
-                    ap = client_obj.connected
-                    ap.remove_client(client_obj)
-                    client_obj.disconnect_to_ap()
-                return
-            connectable_ap = self.configure_connections(client_obj, connectable_ap)
-            if connectable_ap[0] is client_obj.connected:
-                return
-            for ap in connectable_ap:
-                client_obj.connect_to_ap(ap, roam)
-                if ap.add_client(client_obj, roam):
-                    break
-            else:
-                if client_obj.connected:
-                    client_obj.connected.remove_client(client_obj)
-                    client_obj.disconnect_to_ap()
+    def connection_protocol(self, client_obj, connectable_ap, roam):
+        if not connectable_ap:
+            if client_obj.connected:
+                self.disconnect_protocol(client_obj)
+            return
+        connectable_ap = self.configure_connections(client_obj, connectable_ap)
+        if connectable_ap[0] is client_obj.connected:
+            return
+        for ap in connectable_ap:
+            client_obj.connect_to_ap(ap, roam)
+            if ap.add_client(client_obj, roam):
+                break
+        else:
+            if client_obj.connected:
+                self.disconnect_protocol(client_obj)
 
+    def disconnect_protocol(self, client_obj):
+        client_obj.connected.remove_client(client_obj)
+        client_obj.disconnect_to_ap()
 
     def configure_connections(self, cl, lst):
         def sorting_connections(ap):

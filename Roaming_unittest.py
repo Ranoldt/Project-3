@@ -6,7 +6,7 @@ from roaming_simulator import RoamingSimulator
 
 class TestRoamingSimulator(unittest.TestCase):
     @patch('builtins.open', new_callable=mock_open, read_data=s.initial_connection)
-    def test_initial_connection(self, mock_file):
+    def test_initial_connection1(self, mock_file):
         x = RoamingSimulator(mock_file)
         self.assertEqual(x.client_dict['Client1'].connected, x.ap_dict['AP1'])
         self.assertEqual(len(x.ap_dict['AP1'].clients), 1)
@@ -184,13 +184,6 @@ class TestRoamingSimulator(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             x = RoamingSimulator(mock_file)
         self.assertIn('Unrecognized line:', str(e.exception))
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
