@@ -7,14 +7,16 @@ class AccessController:
         self.client_dict = client_dict
         self.log = []
         self.step = 1
-        self.access_controller()
+        self.change_channels()
 
-    def access_controller(self):
+    def change_channels(self):
         ap_lst = list(self.ap_dict.values())
         for ap1 in ap_lst:
             ap1_copy = ap1.channel
             channels = [ap1.channel]
+            iterated = False
             while True:
+                used = len(channels)
                 changed = False
                 for ap2 in ap_lst:
                     if ap1 is not ap2 and ap1.channel == ap2.channel and self.is_overlap(ap1, ap2):
@@ -25,12 +27,18 @@ class AccessController:
                                 changed = True
                                 break
                         else:
+                            if not iterated:
+                                ap1.channel = channels[0]
+                                iterated = True
                             new_channel = ap1.channel - 1 if ap1.channel > 1 else 2
                             ap1.channel = new_channel
-                            channels.append(ap1.channel)
+                            if ap1.channel not in channels:
+                                channels.append(ap1.channel)
                             changed = True
                 if not changed:
                     break
+                if len(channels) == used:
+                    raise ValueError(f'AP has run out channels:{ap1}')
             if ap1.channel != ap1_copy:
                 self.log.append(f'Step {self.step}: AC REQUIRES {ap1.name} TO CHANGE CHANNEL TO {ap1.channel}')
                 self.step += 1

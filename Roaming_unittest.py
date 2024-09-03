@@ -11,6 +11,7 @@ class TestRoamingSimulator(unittest.TestCase):
         self.assertEqual(x.client_dict['Client1'].connected, x.ap_dict['AP1'])
         self.assertEqual(len(x.ap_dict['AP1'].clients), 1)
         self.assertIs(x.ap_dict['AP1'].clients[0], x.client_dict['Client1'])
+        self.assertEqual(x.AC(), {'AccessController': [], 'AP1': ['Step 1: Client1 CONNECT LOCATION 10 10 WiFi6 2.4/5 true true true'], 'Client1': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 109.42970004336019']})
 
     @patch('builtins.open', new_callable=mock_open, read_data=s.initial_connection2)
     def test_initial_connection2(self, mock_file):
@@ -19,6 +20,7 @@ class TestRoamingSimulator(unittest.TestCase):
         self.assertEqual(x.client_dict['Client1'].connected, x.ap_dict['AP1'])
         self.assertIn(x.client_dict['Client1'],x.ap_dict['AP1'].clients)
         self.assertIn(x.client_dict['Client2'],x.ap_dict['AP2'].clients)
+        self.assertEqual(x.AC(), {'AccessController': [], 'AP1': ['Step 1: Client1 CONNECT LOCATION 10 10 WiFi6 2.4/5 true true true'], 'AP2': ['Step 1: Client2 CONNECT LOCATION 99 99 WiFi4 2.4/5 true true true'], 'Client1': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 109.42970004336019'], 'Client2': ['Step 1: CLIENT CONNECT TO AP2 WITH SIGNAL STRENGTH 89.42970004336019']})
 
     @patch('builtins.open', new_callable=mock_open, read_data=s.client_limit)
     def test_AP_client_limit(self, mock_file):
@@ -33,14 +35,16 @@ class TestRoamingSimulator(unittest.TestCase):
         self.assertIn(x.client_dict['Client4'], x.ap_dict['AP1'].clients)
         self.assertEqual(x.client_dict['Client5'].connected, None)
         self.assertNotIn(x.client_dict['Client5'], x.ap_dict['AP1'].clients)
+        self.assertEqual(x.AC(),{'AccessController': [], 'AP1': ['Step 1: Client1 CONNECT LOCATION 10 10 WiFi6 2.4/5 true true true', 'Step 2: Client2 CONNECT LOCATION 9 9 WiFi4 2.4/5 true true true', 'Step 3: Client3 CONNECT LOCATION 8 8 WiFi6 2.4/5 true true true', 'Step 4: Client4 CONNECT LOCATION 7 7 WiFi4 2.4/5 true true true', 'Step 5: Client5 TRIED AP1 BUT WAS DENIED'], 'Client1': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 109.42970004336019'], 'Client2': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 108.51455023214668'], 'Client3': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 107.49149978319906'], 'Client4': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 106.33166084364532'], 'Client5': []})
 
     @patch('builtins.open', new_callable=mock_open, read_data=s.access_controller)
     def test_access_controller(self, mock_file):
         x = RoamingSimulator(mock_file)
         self.assertEqual(x.ap_dict['AP1'].channel, 11)
         self.assertEqual(x.ap_dict['AP2'].channel, 1)
-        self.assertEqual(x.ap_dict['AP3'].channel, 2)
+        self.assertEqual(x.ap_dict['AP3'].channel, 5)
         self.assertEqual(x.ap_dict['AP4'].channel, 6)
+        self.assertEqual(x.AC.log, ['Step 1: AC REQUIRES AP1 TO CHANGE CHANNEL TO 11', 'Step 2: AC REQUIRES AP2 TO CHANGE CHANNEL TO 1', 'Step 3: AC REQUIRES AP3 TO CHANGE CHANNEL TO 5'])
 
     @patch('builtins.open', new_callable=mock_open, read_data= s.ac_no_overlap)
     def test_no_overlap(self, mock_file):
@@ -60,6 +64,7 @@ class TestRoamingSimulator(unittest.TestCase):
         x = RoamingSimulator(mock_file)
         self.assertEqual(x.client_dict['Client1'].coord, (20,20))
         self.assertEqual(x.client_dict['Client1'].connected, None)
+        self.assertEqual(x.AC(), {'AccessController': [], 'AP1': ['Step 1: Client1 CONNECT LOCATION 5 5 WiFi4 2.4/5 true true true', 'Step 2: Client1 DISCONNECTS AT LOCATION 5 5'], 'Client1': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 103.40910013008056', 'Step 2: CLIENT DISCONNECT FROM AP1 WITH SIGNAL STRENGTH 115.45029995663981']})
 
     @patch('builtins.open', new_callable=mock_open, read_data=s.roaming1)
     def test_roaming_to_ap(self, mock_file):
@@ -184,6 +189,11 @@ class TestRoamingSimulator(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             x = RoamingSimulator(mock_file)
         self.assertIn('Unrecognized line:', str(e.exception))
+
+    @patch('builtins.open', new_callable=mock_open, read_data=s.simulation)
+    def test_simulation(self, mock_file):
+        x = RoamingSimulator(mock_file)
+        self.assertEqual(x.AC(),{'AccessController': ['Step 1: AC REQUIRES AP1 TO CHANGE CHANNEL TO 6', 'Step 2: AC REQUIRES AP3 TO CHANGE CHANNEL TO 11'], 'AP1': ['Step 1: Client1 CONNECT LOCATION 5 5 WiFi6 2.4/5 true true true', 'Step 2: Client1 DISCONNECTS AT LOCATION 5 5', 'Step 3: Client3 FAST ROAM TO AP1', 'Step 4: Client3 CONNECT LOCATION 4 4 WiFi6 2.4/5 false false false', 'Step 5: Client4 FAST ROAM TO AP1', 'Step 6: Client4 CONNECT LOCATION 5 5 WiFi6 6 false false true'], 'AP2': ['Step 1: Client2 CONNECT LOCATION 6 6 WiFi6 2.4/5 true false false', 'Step 2: Client2 DISCONNECTS AT LOCATION 6 6'], 'AP3': ['Step 1: Client1 FAST ROAM TO AP3', 'Step 2: Client1 CONNECT LOCATION 54 54 WiFi6 2.4/5 true true true'], 'AP4': ['Step 1: Client3 CONNECT LOCATION 55 55 WiFi6 2.4/5 false false false', 'Step 2: Client4 CONNECT LOCATION 65 65 WiFi6 6 false false true', 'Step 3: Client2 ROAM TO AP4', 'Step 4: Client2 CONNECT LOCATION 64 64 WiFi6 2.4/5 true false false', 'Step 5: Client3 DISCONNECTS AT LOCATION 55 55', 'Step 6: Client4 DISCONNECTS AT LOCATION 65 65'], 'AP5': ['Step 1: Client5 CONNECT LOCATION 201 201 WiFi6 2.4/5 false true true', 'Step 2: Client5 DISCONNECTS AT LOCATION 201 201'], 'Client1': ['Step 1: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 103.40910013008056', 'Step 2: CLIENT ROAM FROM AP1 TO AP3', 'Step 3: CLIENT DISCONNECT FROM AP1 WITH SIGNAL STRENGTH 124.07757523981955', 'Step 4: CLIENT CONNECT TO AP3 WITH SIGNAL STRENGTH 104.05452479087192'], 'Client2': ['Step 1: CLIENT CONNECT TO AP2 WITH SIGNAL STRENGTH 98.47089986991944', 'Step 2: CLIENT ROAM FROM AP2 TO AP4', 'Step 3: CLIENT DISCONNECT FROM AP2 WITH SIGNAL STRENGTH 121.07757523981955', 'Step 4: CLIENT CONNECT TO AP4 WITH SIGNAL STRENGTH 96.47089986991944'], 'Client3': ['Step 1: CLIENT CONNECT TO AP4 WITH SIGNAL STRENGTH 98.40910013008056', 'Step 2: CLIENT ROAM FROM AP4 TO AP1', 'Step 3: CLIENT DISCONNECT FROM AP4 WITH SIGNAL STRENGTH 119.39346058348418', 'Step 4: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 101.47089986991944'], 'Client4': ['Step 1: CLIENT CONNECT TO AP4 WITH SIGNAL STRENGTH 98.40910013008056', 'Step 2: CLIENT ROAM FROM AP4 TO AP1', 'Step 3: CLIENT DISCONNECT FROM AP4 WITH SIGNAL STRENGTH 119.23695383324505', 'Step 4: CLIENT CONNECT TO AP1 WITH SIGNAL STRENGTH 103.40910013008056'], 'Client5': ['Step 1: CLIENT CONNECT TO AP5 WITH SIGNAL STRENGTH 81.01332496431267', 'Step 2: CLIENT DISCONNECT FROM AP5 WITH SIGNAL STRENGTH 121.01332496431267']})
 
 
 if __name__ == '__main__':

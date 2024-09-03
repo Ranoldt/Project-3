@@ -39,8 +39,11 @@ class RoamingSimulator:
 
     def iterate_moves(self):
         for move in self.moves:
-            self.client_dict[move[0]].client_move(move[1:])
-            self.find_connections([self.client_dict[move[0]]], True)
+            try:
+                self.client_dict[move[0]].client_move(move[1:])
+                self.find_connections([self.client_dict[move[0]]], True)
+            except KeyError:
+                raise ValueError('Client does not exist', move[0])
 
     def find_connections(self, cl, roam=None):
         for client_obj in cl:

@@ -5,7 +5,7 @@ class NetworkEntity:
     def __init__(self, name,x,y, wifi_standard, frequency, supports_11k, supports_11v, supports_11r, minimal_rssi=None):
         assert supports_11r in ('true', 'false') and supports_11v in ('true', 'false') and supports_11k in ('true', 'false'), 'Incorrect Supports standards: Must be either "false" or "true".'
         assert x.isdigit() and y.isdigit(), 'Network coordinates must be integers'
-        assert 'WiFi' in wifi_standard and wifi_standard[4:].isdigit() , 'Network wifi standard must be in format "WiFi{number}"'
+        assert 'WiFi' in wifi_standard and wifi_standard[4:].isdigit(), 'Network wifi standard must be in format "WiFi{number}"'
         assert all(x in ('2.4', '5', '6') for x in frequency.split('/')) and len(frequency.split('/')) < 4, 'Frequency must be "2.4, 6, 5"'
         if minimal_rssi:
             assert minimal_rssi.isdigit(), 'Minimal RSSI must be an integer'

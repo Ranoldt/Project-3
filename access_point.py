@@ -38,7 +38,4 @@ class AccessPoints(NetworkEntity):
         self.clients.remove(client)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.wifi_standard},{self.supports},{self.supports_11r},{self.coverage},{self.device_limit},{self.minimal_rssi})'
-
-    def __call__(self):
-        return self.log
+        return f'{self.__class__.__name__}({self.name},{self.coord[0]},{self.coord[1]},{self.channel},{self.power},{self.frequency_str},{self.wifi_standard},{self.supports[0]},{self.supports[1]},{self.supports[2]},{self.coverage},{self.device_limit},{self.minimal_rssi})'

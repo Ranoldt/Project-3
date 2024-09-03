@@ -12,7 +12,7 @@ class ClientObj(NetworkEntity):
 
     def connect_to_ap(self, ap, roam=None):
         if len(ap.clients) < ap.device_limit:
-            if roam:
+            if roam and self.connected:
                 self.log_action(f'Step {self.step}: CLIENT ROAM FROM {self.connected.name} TO {ap.name}')
                 self.connected.remove_client(self)
                 self.disconnect_to_ap()
@@ -28,4 +28,4 @@ class ClientObj(NetworkEntity):
         self.connected = None
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name},{self.coord},{self.wifi_standard},{self.frequency},{self.supports},{self.minimal_rssi})'
+        return f'{self.__class__.__name__}({self.name},{self.coord[0]},{self.coord[1]},{self.wifi_standard},{self.frequency_str},{self.supports[0]},{self.supports[1]},{self.supports[2]},{self.minimal_rssi})'

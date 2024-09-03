@@ -85,6 +85,21 @@ input_error13 = 'AP AP1 1 1 6 18 2.4 WiFi5 true true true 0 10 w\n'
 
 input_error14 = 'AFIFI DJIFJIJIOFNHIO JFIOJ FIPJPOWJPOFKOPJ EFPOJPOF\n'
 
+simulation = ('AP AP1 0 0 11 20 5 WiFi7 true true true 20 10 120\n'
+              'AP AP2 10 10 11 23 2.4/5 WiFi6 true false false 20 10 100\n'
+              'AP AP3 50 50 6 19 6 WiFi8 true true true 20 10 130\n'
+              'AP AP4 60 60 6 25 5 WiFi8 false true false 20 10 100\n'
+              'AP AP5 200 200 11 30 6 WiFi7 false true true 20 10 100\n'
+              'CLIENT Client1 5 5 WiFi6 2.4/5 true true true 110\n'
+              'CLIENT Client2 6 6 WiFi6 2.4/5 true false false 110\n'
+              'CLIENT Client3 55 55 WiFi6 2.4/5 false false false 110\n'
+              'CLIENT Client4 65 65 WiFi6 6 false false true 110\n'
+              'CLIENT Client5 201 201 WiFi6 2.4/5 false true true 110\n'
+              'MOVE Client1 54 54\n'
+              'MOVE Client2 64 64\n'
+              'MOVE Client3 4 4\n'
+              'MOVE Client4 5 5\n'
+              'MOVE Client5 300 300\n')
 
 
 
