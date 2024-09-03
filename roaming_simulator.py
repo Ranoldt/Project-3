@@ -82,7 +82,7 @@ class RoamingSimulator:
         def sorting_connections(ap):
             return (
                 ap.standard < cl.standard,
-                self.sort_standards(ap,cl),
+                self.sort_supports(ap, cl),
                 -ap.power,
                 -max(ap.frequency),
                 self.sort_channel(ap)
@@ -90,7 +90,7 @@ class RoamingSimulator:
         lst = sorted(lst, key=sorting_connections)
         return lst
 
-    def sort_standards(self, ap, cl):
+    def sort_supports(self, ap, cl):
         matches = [x == y for x, y in zip(ap.supports, cl.supports)]
         match_count = sum(matches)
         true_count = sum(1 for x,y in zip(ap.supports, cl.supports) if x == 'true' and y == 'true')

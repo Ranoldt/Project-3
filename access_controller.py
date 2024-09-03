@@ -16,7 +16,7 @@ class AccessController:
             channels = [ap1.channel]
             iterated = False
             while True:
-                used = len(channels)
+                channel_count = len(channels)
                 changed = False
                 for ap2 in ap_lst:
                     if ap1 is not ap2 and ap1.channel == ap2.channel and self.is_overlap(ap1, ap2):
@@ -37,7 +37,7 @@ class AccessController:
                             changed = True
                 if not changed:
                     break
-                if len(channels) == used:
+                if len(channels) == channel_count:
                     raise ValueError(f'AP has run out channels:{ap1}')
             if ap1.channel != ap1_copy:
                 self.log.append(f'Step {self.step}: AC REQUIRES {ap1.name} TO CHANGE CHANNEL TO {ap1.channel}')
