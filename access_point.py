@@ -4,6 +4,11 @@ from network_entity import NetworkEntity
 class AccessPoints(NetworkEntity):
     def __init__(self, *parameters):
         super().__init__(*parameters[:3], parameters[6], parameters[5], *parameters[7:9], *parameters[9::3])
+        assert parameters[3].isdigit(), 'Channel must be an integer'
+        assert 0 < int(parameters[3]) <= 11, 'Channel must be between 1 and 11'
+        assert parameters[4].isdigit(), 'Power must be an integer'
+        assert parameters[10].isdigit(), 'Coverage must be an integer'
+        assert parameters[11].isdigit(), 'Device_limit must be an integer'
         self.channel = int(parameters[3])
         self.power = int(parameters[4])
         self.coverage = int(parameters[10])
@@ -33,13 +38,7 @@ class AccessPoints(NetworkEntity):
         self.clients.remove(client)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.wifi_standard},{self.supports},{self.coverage},{self.device_limit},{self.minimal_rssi})'
+        return f'{self.__class__.__name__}({self.name},{self.coord},{self.channel},{self.power},{self.frequency},{self.wifi_standard},{self.supports},{self.supports_11r},{self.coverage},{self.device_limit},{self.minimal_rssi})'
 
     def __call__(self):
         return self.log
-
-if __name__ == '__main__':
-    x = ['AP2', '100', '100', '6', '20', '5', 'WiFi7', 'false', 'true', 'false', '40', '60']
-    y = ['AP1', '0', '0', '6', '20', '2.4/5', 'WiFi6', 'true', 'true', 'true', '50', '10', '75']
-    access_points = AccessPoints(*y)
-    print(access_points)

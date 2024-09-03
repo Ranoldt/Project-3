@@ -10,9 +10,9 @@ class RoamingSimulator:
         self.client_dict = {}
         self.ap_dict = {}
         self.moves = []
-        self.initalize_functions()
+        self.initialize_functions()
 
-    def initalize_functions(self):
+    def initialize_functions(self):
         self.file_read()
         self.AC = AccessController(self.ap_dict, self.client_dict)
         self.connect(list(self.client_dict.values()))
@@ -28,12 +28,14 @@ class RoamingSimulator:
                     self.client_dict[line[1]] = ClientObj(*line[1:])
                 elif line[0] == 'MOVE':
                     self.moves.append(line[1:])
+                else:
+                    raise ValueError('Unrecognized line:', line)
 
     def find_distance(self, obj1, obj2):
         x1, y1 = obj1.coord
         x2, y2 = obj2.coord
 
-        return math.sqrt((x2 - x1) ** 2 + (y2 - y1)** 2)
+        return math.sqrt((x2 - x1) ** 2 + (y2 - y1)**2)
 
     def iterate_moves(self):
         for move in self.moves:
@@ -51,6 +53,7 @@ class RoamingSimulator:
                     if cl_rssi < ap_obj.minimal_rssi:
                         continue
                 connectable_ap.append(ap_obj)
+
             if not connectable_ap:
                 if client_obj.connected:
                     ap = client_obj.connected
@@ -62,17 +65,22 @@ class RoamingSimulator:
                 return
             for ap in connectable_ap:
                 client_obj.connect_to_ap(ap, roam)
-                if ap.add_client(client_obj):
+                if ap.add_client(client_obj, roam):
                     break
+            else:
+                if client_obj.connected:
+                    client_obj.connected.remove_client(client_obj)
+                    client_obj.disconnect_to_ap()
+
 
     def configure_connections(self, cl, lst):
         def sorting_connections(ap):
             return (
-                self.sort_channel(ap),
-                -max(ap.frequency),
-                -ap.power,
+                ap.standard < cl.standard,
                 self.sort_standards(ap,cl),
-                ap.standard < cl.standard
+                -ap.power,
+                -max(ap.frequency),
+                self.sort_channel(ap)
             )
         lst = sorted(lst, key=sorting_connections)
         return lst
@@ -80,10 +88,12 @@ class RoamingSimulator:
     def sort_standards(self, ap, cl):
         matches = [x == y for x, y in zip(ap.supports, cl.supports)]
         match_count = sum(matches)
+        true_count = sum(1 for x,y in zip(ap.supports, cl.supports) if x == 'true' and y == 'true')
 
         return (
             -match_count,
             -int(matches[2]),
+            -true_count
         )
 
     def sort_channel(self, ap):
@@ -106,9 +116,3 @@ class RoamingSimulator:
         obj_dict = {**self.ap_dict, **self.client_dict, 'AccessController': self.AC}
         with open(f'{name}.dat', 'wb') as f:
             pickle.dump(obj_dict[name].__call__(), f)
-
-
-if __name__ == '__main__':
-    x = RoamingSimulator('input.txt')
-    print(x.ap_dict['AP1'].name)
-
